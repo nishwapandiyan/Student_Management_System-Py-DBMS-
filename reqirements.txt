@@ -1,4 +1,0 @@
-mysql-connector-python
-tabulate
-openpyxl
-python-dotenv
