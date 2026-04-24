@@ -22,8 +22,8 @@ class StudentDB():
             self.cursor = self.mydb.cursor()
         except Exception as e:
             print("Database connection failed:", e)
+            exit()
 
-    # ---------------- LOGIN ---------------- #
     def login(self):
         attempts = 3
 
@@ -33,12 +33,13 @@ class StudentDB():
 
             hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-            query = "SELECT user_role FROM users WHERE username = %s AND user_password = %s"
+            query = "SELECT user_role FROM users WHERE username = %s AND user_word = %s"
             self.cursor.execute(query, (username, hashed_password))
             result = self.cursor.fetchone()
 
             if result:
                 role = result[0].lower()
+                
                 print(f"{role} login successful")
                 return username, role
             else:
@@ -48,7 +49,6 @@ class StudentDB():
         print("Too many attempts!")
         return None, None
 
-    # ---------------- DISPLAY ---------------- #
     def display(self, record):
         if record:
             column = [col[0] for col in self.cursor.description]
@@ -56,7 +56,6 @@ class StudentDB():
         else:
             print("No Data Found")
 
-    # ---------------- MARK INPUT ---------------- #
     def get_marks(self, msg):
         while True:
             try:
@@ -68,7 +67,7 @@ class StudentDB():
             except:
                 print("Invalid input")
 
-    # ---------------- GRADE ---------------- #
+
     def calculate_grade(self, avg):
         if avg >= 90:
             return 'A'
@@ -81,7 +80,7 @@ class StudentDB():
         else:
             return 'Fail'
 
-    # ---------------- ADD STUDENT ---------------- #
+
     def add_student(self):
         try:
             n = int(input("Enter number of students: "))
@@ -93,12 +92,24 @@ class StudentDB():
             print(f"\nStudent {i+1}")
 
             name = input("Enter Student Name: ")
+            
+            self.cursor.execute(""" SELECT * FROM students where student_name = %s""",(name,))
+            if self.cursor.fetchone():
+                print("Student Name Already Exists")
+                choice = input("Do you want to update(Y/N):").lower()
+                
+                if choice == 'y':
+                    self.update_student(name)
+                else:
+                    print("Skipped")
+                    return    
+
 
             password = getpass.getpass("Set Password: ")
             confirm = getpass.getpass("Confirm Password: ")
 
             if password != confirm:
-                print("Passwords do not match!")
+                print("Password do not match!")
                 return
 
             hashed_password = hashlib.sha256(password.encode()).hexdigest()
@@ -115,11 +126,11 @@ class StudentDB():
 
             # Insert into users
             self.cursor.execute(
-                "INSERT INTO users (username, user_password, user_role) VALUES (%s,%s,%s)",
+                "INSERT INTO users (username, user_word, user_role) VALUES (%s,%s,%s)",
                 (name, hashed_password, 'student')
             )
 
-            # Insert into students
+    
             self.cursor.execute(
                 """INSERT INTO students 
                 (student_name, subject_1, subject_2, subject_3, subject_4, subject_5, total, average, grade)
@@ -130,7 +141,7 @@ class StudentDB():
         self.mydb.commit()
         print("Students added successfully!")
 
-    # ---------------- SHOW ---------------- #
+    
     def show_student_table(self):
         self.cursor.execute("SELECT * FROM students")
         self.display(self.cursor.fetchall())
@@ -144,7 +155,7 @@ class StudentDB():
         self.cursor.execute("SELECT * FROM students WHERE student_name = %s", (uname,))
         self.display(self.cursor.fetchall())
 
-    # ---------------- UPDATE ---------------- #
+    
     def update_student(self):
         name = input("Enter student name: ")
 
@@ -173,7 +184,7 @@ class StudentDB():
         self.mydb.commit()
         print("Updated successfully")
 
-    # ---------------- DELETE ---------------- #
+    
     def delete_student(self):
         name = input("Enter student name: ")
 
@@ -188,12 +199,12 @@ class StudentDB():
             self.mydb.commit()
             print("Deleted successfully")
 
-    # ---------------- TOPPER ---------------- #
+    
     def show_topper(self):
         self.cursor.execute("SELECT * FROM students ORDER BY total DESC LIMIT 1")
         self.display(self.cursor.fetchall())
 
-    # ---------------- EXPORT ---------------- #
+    
     def export(self):
         self.cursor.execute("SELECT * FROM students")
         records = self.cursor.fetchall()
@@ -214,11 +225,17 @@ class StudentDB():
         wb.save("Student_Detail.xlsx")
         print("Exported successfully")
 
-    # ---------------- MENU ---------------- #
     def menu(self):
         while True:
-            print("\n1.Add  2.Show  3.Search  4.Update  5.Delete  6.Topper  7.Export  8.Exit")
-
+            print("=" * 50)
+            print("{:^50}".format("STUDENT MANAGEMENT SYSTEM"))
+            
+            print("*"*50)
+            print("{:^50}".format("MAIN MENU"))
+            print("*"*50)
+            
+            print("1.Add Student  \n2.Show Details  \n3.Search Student  \n4.Update Student  \n5.Delete Student  \n6.Select Topper  \n7.Export Details  \n8.Exit")
+            print("="*50)
             try:
                 choice = int(input("Enter choice: "))
             except:
@@ -240,7 +257,6 @@ class StudentDB():
         self.mydb.close()
 
 
-# ---------------- MAIN ---------------- #
 if __name__ == "__main__":
 
     app = StudentDB()
@@ -253,7 +269,12 @@ if __name__ == "__main__":
     elif role == 'student':
         while True:
             print("\n1.Show My Details  2.Exit")
-            choice = int(input("Enter choice: "))
+            try:
+             choice = int(input("Enter choice: "))
+            except:
+             print("Invalid input")
+             continue
+
             if choice == 1:
                 app.show_my_details(username)
             else:
