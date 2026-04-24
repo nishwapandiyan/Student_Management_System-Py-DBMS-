@@ -19,7 +19,7 @@ class StudentDB():
                 password=os.getenv('DB_PASSWORD'),
                 database=os.getenv('DB_NAME')
             )
-            self.cursor = self.mydb.cursor()
+            self.cursor = self.mydb.cursor(buffered=True)
         except Exception as e:
             print("Database connection failed:", e)
             exit()
@@ -224,6 +224,16 @@ class StudentDB():
 
         wb.save("Student_Detail.xlsx")
         print("Exported successfully")
+        
+    def delete_table(self):
+        
+        choice = input("Are You sure(Y/N):").lower()
+        if choice == 'y':
+           self.cursor.execute("TRUNCATE TABLE students")
+           self.mydb.commit()            
+           print("All Data's Deleted Successfully")    
+        else:
+            print("Deletion Cancelled")   
 
     def menu(self):
         while True:
@@ -234,7 +244,7 @@ class StudentDB():
             print("{:^50}".format("MAIN MENU"))
             print("*"*50)
             
-            print("1.Add Student  \n2.Show Details  \n3.Search Student  \n4.Update Student  \n5.Delete Student  \n6.Select Topper  \n7.Export Details  \n8.Exit")
+            print("1.Add Student  \n2.Show Details  \n3.Search Student  \n4.Update Student  \n5.Delete Student  \n6.Select Topper  \n7.Export Details  \n8.Delete Details \n9.Exit")
             print("="*50)
             try:
                 choice = int(input("Enter choice: "))
@@ -250,7 +260,8 @@ class StudentDB():
                 case 5: self.delete_student()
                 case 6: self.show_topper()
                 case 7: self.export()
-                case 8: break
+                case 8: self.delete_table()
+                case 9: break
 
     def close(self):
         self.cursor.close()
@@ -268,7 +279,9 @@ if __name__ == "__main__":
 
     elif role == 'student':
         while True:
-            print("\n1.Show My Details  2.Exit")
+            print("=" * 50)
+            print("1.Show My Details  \n2.Exit")
+            print("=" * 50)
             try:
              choice = int(input("Enter choice: "))
             except:
