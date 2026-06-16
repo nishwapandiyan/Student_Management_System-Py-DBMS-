@@ -31,10 +31,10 @@ class StudentDB():
             username = input("Enter the Username: ")
             password = getpass.getpass("Enter the Password: ")
 
-            hashed_password = hashlib.sha256(password.encode()).hexdigest()
+            # hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
             query = "SELECT user_role FROM users WHERE username = %s AND user_word = %s"
-            self.cursor.execute(query, (username, hashed_password))
+            self.cursor.execute(query, (username, password))
             result = self.cursor.fetchone()
 
             if result:
